@@ -11,26 +11,47 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Edit, Trash2, Search, Users, Shield, Loader2 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { User, CreateUserInput, UpdateUserInput } from "@/lib/userManagementDb";
+// Define types locally since userManagementDb is disabled
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'super_admin' | 'admin' | 'viewer';
+  created_at: string;
+  updated_at: string;
+}
 
-// Database-based functions for user management
+export interface CreateUserInput {
+  email: string;
+  name: string;
+  password: string;
+  role: 'super_admin' | 'admin' | 'viewer';
+}
+
+export interface UpdateUserInput {
+  name?: string;
+  role?: 'super_admin' | 'admin' | 'viewer';
+  password?: string;
+}
+
+// Local user management functions
 async function getUsers(): Promise<User[]> {
   try {
-    const response = await fetch('/api/users-db');
+    const response = await fetch('/api/users');
     const data = await response.json();
     if (data.success) {
       return data.users;
     }
     return [];
   } catch (error) {
-    console.error('Error fetching users from database:', error);
+    console.error('Error fetching users:', error);
     return [];
   }
 }
 
 async function createUser(input: CreateUserInput): Promise<User | null> {
   try {
-    const response = await fetch('/api/users-db', {
+    const response = await fetch('/api/users', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -46,7 +67,7 @@ async function createUser(input: CreateUserInput): Promise<User | null> {
       throw new Error(data.error || 'Failed to create user');
     }
   } catch (error) {
-    console.error('Error creating user in database:', error);
+    console.error('Error creating user:', error);
     throw error;
   }
 }
@@ -77,8 +98,8 @@ async function deleteUser(userId: string): Promise<boolean> {
 
 async function isEmailAvailable(email: string, excludeUserId?: string): Promise<boolean> {
   try {
-    // Check database for email availability
-    const response = await fetch('/api/users-db');
+    // Check for email availability
+    const response = await fetch('/api/users');
     const data = await response.json();
 
     if (data.success) {

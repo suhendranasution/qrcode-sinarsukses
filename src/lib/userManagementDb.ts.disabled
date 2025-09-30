@@ -29,6 +29,11 @@ export async function getUsers(): Promise<User[]> {
   try {
     const supabase = await createSupabaseServerClient();
 
+    if (!supabase) {
+      console.warn('Supabase client not available, using default users');
+      return getDefaultUsers();
+    }
+
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -51,6 +56,11 @@ export async function getUsers(): Promise<User[]> {
 export async function createUser(input: CreateUserInput): Promise<User | null> {
   try {
     const supabase = await createSupabaseServerClient();
+
+    if (!supabase) {
+      console.warn('Supabase client not available, cannot create user');
+      return null;
+    }
 
     // Hash password
     const passwordHash = await hashPassword(input.password);
@@ -160,6 +170,11 @@ export async function isEmailAvailable(email: string, excludeUserId?: string): P
 export async function validateUserCredentials(email: string, password: string): Promise<User | null> {
   try {
     const supabase = await createSupabaseServerClient();
+
+    if (!supabase) {
+      console.warn('Supabase client not available for validation');
+      return null;
+    }
 
     // Get user by email
     const { data: user, error } = await supabase
