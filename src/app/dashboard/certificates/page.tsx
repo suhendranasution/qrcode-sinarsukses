@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Search, FileText, Download, QrCode, Upload, ArrowLeft } from "lucide-react";
+import { Plus, Edit, Trash2, Search, FileText, Download, QrCode, Upload, ArrowLeft, Eye } from "lucide-react";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { getCertificates, getBrands, createCertificate, updateCertificate, deleteCertificate, generateSlug } from "@/lib/database";
@@ -194,6 +194,11 @@ export default function CertificatesPage() {
       console.error("Error downloading QR code:", error);
       alert("Gagal mengunduh QR code");
     }
+  };
+
+  const handlePreview = (certificate: Certificate) => {
+    const url = generateCertificateUrl(certificate.brands.slug, certificate.product_slug);
+    window.open(url, '_blank');
   };
 
   const handleProductNameChange = (name: string) => {
@@ -430,7 +435,16 @@ export default function CertificatesPage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => handlePreview(certificate)}
+                        title="Preview Halaman Client"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleEdit(certificate)}
+                        title="Edit Sertifikat"
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
@@ -438,6 +452,7 @@ export default function CertificatesPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleDownloadQR(certificate)}
+                        title="Download QR Code"
                       >
                         <QrCode className="w-4 h-4" />
                       </Button>
@@ -445,6 +460,7 @@ export default function CertificatesPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleDelete(certificate.id)}
+                        title="Hapus Sertifikat"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
