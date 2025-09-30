@@ -1,41 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-
-// In-memory storage for users (fallback when localStorage is not available)
-let inMemoryUsers = [
-  {
-    id: '00000000-0000-0000-0000-000000000001',
-    email: 'superadmin@example.com',
-    name: 'Super Admin',
-    role: 'super_admin',
-    password: 'admin123',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000002',
-    email: 'admin@example.com',
-    name: 'Admin',
-    role: 'admin',
-    password: 'admin123',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
+import { getUsers, createUser, isEmailAvailable } from "@/lib/userManagementDb";
 
 export async function GET(request: NextRequest) {
   try {
-    // Check if users are sent in request body (from client-side localStorage)
-    const body = await request.json().catch(() => ({}));
-
-    if (body.users && Array.isArray(body.users)) {
-      // Update in-memory storage with client-side users
-      inMemoryUsers = body.users;
-      console.log('In-memory users synced from client:', inMemoryUsers.length);
-    }
+    // Get users from database
+    const users = await getUsers();
 
     return NextResponse.json({
       success: true,
-      users: inMemoryUsers
+      users: users
     });
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -49,43 +22,41 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-
-    // Check if this is a sync operation
-    if (body.sync && body.users) {
-      inMemoryUsers = body.users;
-      console.log('Users synced to server:', inMemoryUsers.length);
-      return NextResponse.json({
-        success: true,
-        message: 'Users synced successfully'
-      });
-    }
-
-    // Regular user creation
     const { email, name, password, role } = body;
 
-    // Check if user already exists
-    const existingUser = inMemoryUsers.find(u => u.email === email);
-    if (existingUser) {
+    // Validate required fields
+    if (!email || !name || !password || !role) {
+      return NextResponse.json({
+        success: false,
+        error: 'All fields are required: email, name, password, role'
+      }, { status: 400 });
+    }
+
+    // Check if email is already available
+    const emailExists = !(await isEmailAvailable(email));
+    if (emailExists) {
       return NextResponse.json({
         success: false,
         error: 'Email already exists'
       }, { status: 400 });
     }
 
-    // Create new user
-    const newUser = {
-      id: crypto.randomUUID(),
+    // Create user in database
+    const newUser = await createUser({
       email,
       name,
-      role,
-      password, // Store password as-is for demo
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+      password,
+      role
+    });
 
-    inMemoryUsers.push(newUser);
+    if (!newUser) {
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to create user'
+      }, { status: 500 });
+    }
 
-    console.log('User created:', newUser);
+    console.log('User created in database:', newUser);
 
     return NextResponse.json({
       success: true,
@@ -95,7 +66,7 @@ export async function POST(request: NextRequest) {
     console.error('Error creating user:', error);
     return NextResponse.json({
       success: false,
-      error: 'Failed to create user'
+      error: 'Failed to create user: ' + (error instanceof Error ? error.message : 'Unknown error')
     }, { status: 500 });
   }
 }

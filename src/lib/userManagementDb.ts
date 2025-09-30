@@ -93,6 +93,11 @@ export async function updateUser(userId: string, input: UpdateUserInput): Promis
   try {
     const supabase = await createSupabaseServerClient();
 
+    if (!supabase) {
+      console.warn('Supabase client not available, cannot update user');
+      return null;
+    }
+
     const updateData: { name?: string; role?: 'super_admin' | 'admin' | 'viewer'; password_hash?: string } = {};
 
     if (input.name) updateData.name = input.name;
@@ -125,6 +130,11 @@ export async function deleteUser(userId: string): Promise<boolean> {
   try {
     const supabase = await createSupabaseServerClient();
 
+    if (!supabase) {
+      console.warn('Supabase client not available, cannot delete user');
+      return false;
+    }
+
     const { error } = await supabase
       .from('users')
       .delete()
@@ -146,6 +156,11 @@ export async function deleteUser(userId: string): Promise<boolean> {
 export async function isEmailAvailable(email: string, excludeUserId?: string): Promise<boolean> {
   try {
     const supabase = await createSupabaseServerClient();
+
+    if (!supabase) {
+      console.warn('Supabase client not available for email check');
+      return false;
+    }
 
     let query = supabase
       .from('users')
