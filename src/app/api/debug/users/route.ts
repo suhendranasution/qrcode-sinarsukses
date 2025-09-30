@@ -4,10 +4,32 @@ import { getUsers } from '@/lib/userManagementDb';
 
 export async function GET() {
   try {
-    const results: any = {
+    const results: {
+      timestamp: string;
+      test: string;
+      environment: string;
+      steps: Array<{
+        step: string;
+        status?: string;
+        supabaseUrl?: string;
+        supabaseKey?: string;
+        userCount?: number;
+        error?: string;
+        columns?: string[] | string;
+        sampleCount?: number;
+        users?: Array<{ id: string; email: string; role: string }>;
+      }>;
+      summary?: {
+        totalSteps: number;
+        passed: number;
+        failed: number;
+        overall: string;
+        issues: string[];
+      };
+    } = {
       timestamp: new Date().toISOString(),
       test: 'user-management-database',
-      environment: process.env.NODE_ENV,
+      environment: process.env.NODE_ENV || 'unknown',
       steps: []
     };
 
@@ -90,7 +112,7 @@ export async function GET() {
 
     // Step 5: Test user creation (dry run - check table structure)
     try {
-      const { data: columns, error } = await supabase.from('users').select('*').limit(0);
+      const { error } = await supabase.from('users').select('*').limit(0);
 
       if (error) {
         results.steps.push({
@@ -113,15 +135,15 @@ export async function GET() {
     }
 
     // Summary
-    const failedSteps = results.steps.filter((step: any) => step.status?.includes('✗'));
-    const passedSteps = results.steps.filter((step: any) => step.status?.includes('✓'));
+    const failedSteps = results.steps.filter((step) => step.status?.includes('✗'));
+    const passedSteps = results.steps.filter((step) => step.status?.includes('✓'));
 
     results.summary = {
       totalSteps: results.steps.length,
       passed: passedSteps.length,
       failed: failedSteps.length,
       overall: failedSteps.length === 0 ? '✓ All systems operational' : '✗ Some issues detected',
-      issues: failedSteps.map((step: any) => `${step.step}: ${step.error || 'Unknown error'}`)
+      issues: failedSteps.map((step) => `${step.step}: ${step.error || 'Unknown error'}`)
     };
 
     return NextResponse.json(results);
