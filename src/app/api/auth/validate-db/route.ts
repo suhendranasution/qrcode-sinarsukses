@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateUserCredentials } from "@/lib/userManagementDb";
-import { hashPassword } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,10 +28,10 @@ export async function POST(request: NextRequest) {
       user: user
     });
   } catch (error) {
-    console.error('Error validating credentials:', error);
+    console.error('Error validating database credentials:', error);
     return NextResponse.json({
       success: false,
-      error: 'Validation failed'
+      error: 'Database validation failed'
     }, { status: 500 });
   }
 }
