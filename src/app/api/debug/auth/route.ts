@@ -10,7 +10,22 @@ export async function POST(request: Request) {
       timestamp: new Date().toISOString(),
       test: 'authentication-database',
       email: email || 'not-provided',
-      steps: []
+      success: false,
+      message: '',
+      steps: [] as Array<{
+        step: string;
+        status: string;
+        email?: string;
+        passwordLength?: number;
+        user?: {
+          id: string;
+          email: string;
+          name: string;
+          role: string;
+          created_at: string;
+        };
+        error?: string;
+      }>
     };
 
     // Step 1: Validate input
