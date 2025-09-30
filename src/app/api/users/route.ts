@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUsers, createUser, isEmailAvailable } from "@/lib/userManagementDb";
+import { getUsers, createUser, deleteUser, isEmailAvailable } from "@/lib/userManagementDb";
 
 export async function GET(request: NextRequest) {
   try {
@@ -67,6 +67,40 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: 'Failed to create user: ' + (error instanceof Error ? error.message : 'Unknown error')
+    }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { userId } = body;
+
+    if (!userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'User ID is required'
+      }, { status: 400 });
+    }
+
+    const success = await deleteUser(userId);
+
+    if (!success) {
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to delete user'
+      }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to delete user: ' + (error instanceof Error ? error.message : 'Unknown error')
     }, { status: 500 });
   }
 }

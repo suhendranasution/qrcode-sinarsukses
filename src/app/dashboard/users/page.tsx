@@ -87,12 +87,25 @@ async function updateUser(userId: string, input: UpdateUserInput): Promise<User 
 async function deleteUser(userId: string): Promise<boolean> {
   try {
     console.log('Delete user:', userId);
-    // For now, we'll just return true
-    // In a real implementation, you would have a delete API endpoint
-    return true;
+
+    const response = await fetch('/api/users', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      return true;
+    } else {
+      throw new Error(data.error || 'Failed to delete user');
+    }
   } catch (error) {
     console.error('Error deleting user:', error);
-    return false;
+    throw error;
   }
 }
 
@@ -254,9 +267,10 @@ export default function UsersPage() {
     try {
       await deleteUser(userId);
       fetchUsers();
+      setError(""); // Clear any existing error
     } catch (error) {
       console.error("Error deleting user:", error);
-      setError("Gagal menghapus pengguna");
+      setError("Gagal menghapus pengguna: " + (error instanceof Error ? error.message : 'Terjadi kesalahan'));
     }
   };
 
