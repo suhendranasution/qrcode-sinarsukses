@@ -7,14 +7,14 @@ import { getCertificateBySlugs } from "@/lib/database";
 import { CertificateViewer } from "@/components/CertificateViewer";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     brandSlug: string;
     productSlug: string;
-  };
+  }>;
 }
 
 export default async function CertificatePage({ params }: PageProps) {
-  const { brandSlug, productSlug } = params;
+  const { brandSlug, productSlug } = await params;
 
   // Get certificate from database
   const certificate = await getCertificateBySlugs(brandSlug, productSlug);

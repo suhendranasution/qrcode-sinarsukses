@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // In-memory storage for users (sync with the users route)
-let inMemoryUsers = [
+const inMemoryUsers = [
   {
     id: '00000000-0000-0000-0000-000000000001',
     email: 'superadmin@example.com',
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Return user data (without password)
-    const { password: _, ...userWithoutPassword } = user;
+    const { password: _password, ...userWithoutPassword } = user;
 
     return NextResponse.json({
       success: true,

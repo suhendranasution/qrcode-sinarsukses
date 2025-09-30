@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Image, Shield, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Shield, Eye, EyeOff, Loader2 } from "lucide-react";
+import Image from "next/image";
 import { loginAdmin } from "@/lib/auth";
 import { validateUserCredentials } from "@/lib/userAuth";
 

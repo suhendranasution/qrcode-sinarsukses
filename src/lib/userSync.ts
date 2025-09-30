@@ -32,12 +32,12 @@ export function getUsersFromLocalStorage(): User[] {
   }
 
   // Initialize with default users if localStorage is empty
-  const defaultUsers = [
+  const defaultUsers: User[] = [
     {
       id: '00000000-0000-0000-0000-000000000001',
       email: 'superadmin@example.com',
       name: 'Super Admin',
-      role: 'super_admin',
+      role: 'super_admin' as const,
       password: 'admin123',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -46,7 +46,7 @@ export function getUsersFromLocalStorage(): User[] {
       id: '00000000-0000-0000-0000-000000000002',
       email: 'admin@example.com',
       name: 'Admin',
-      role: 'admin',
+      role: 'admin' as const,
       password: 'admin123',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
