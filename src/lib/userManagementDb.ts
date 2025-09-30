@@ -1,0 +1,216 @@
+// Database-based user management using Supabase
+import { createSupabaseServerClient } from "@/lib/supabase";
+import { hashPassword } from "@/lib/auth";
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'super_admin' | 'admin' | 'viewer';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateUserInput {
+  email: string;
+  name: string;
+  password: string;
+  role: 'super_admin' | 'admin' | 'viewer';
+}
+
+export interface UpdateUserInput {
+  name?: string;
+  role?: 'super_admin' | 'admin' | 'viewer';
+  password?: string;
+}
+
+// Get all users from database
+export async function getUsers(): Promise<User[]> {
+  try {
+    const supabase = await createSupabaseServerClient();
+
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching users from database:', error);
+      // Fallback to default users
+      return getDefaultUsers();
+    }
+
+    return data || getDefaultUsers();
+  } catch (error) {
+    console.error('Error in getUsers:', error);
+    return getDefaultUsers();
+  }
+}
+
+// Create user in database
+export async function createUser(input: CreateUserInput): Promise<User | null> {
+  try {
+    const supabase = await createSupabaseServerClient();
+
+    // Hash password
+    const passwordHash = await hashPassword(input.password);
+
+    const { data, error } = await supabase
+      .from('users')
+      .insert({
+        email: input.email,
+        name: input.name,
+        password_hash: passwordHash,
+        role: input.role
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating user in database:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error creating user:', error);
+    throw error;
+  }
+}
+
+// Update user in database
+export async function updateUser(userId: string, input: UpdateUserInput): Promise<User | null> {
+  try {
+    const supabase = await createSupabaseServerClient();
+
+    const updateData: { name?: string; role?: 'super_admin' | 'admin' | 'viewer'; password_hash?: string } = {};
+
+    if (input.name) updateData.name = input.name;
+    if (input.role) updateData.role = input.role;
+    if (input.password) {
+      updateData.password_hash = await hashPassword(input.password);
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .update(updateData)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating user in database:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error updating user:', error);
+    throw error;
+  }
+}
+
+// Delete user from database
+export async function deleteUser(userId: string): Promise<boolean> {
+  try {
+    const supabase = await createSupabaseServerClient();
+
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Error deleting user from database:', error);
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    throw error;
+  }
+}
+
+// Check if email is available
+export async function isEmailAvailable(email: string, excludeUserId?: string): Promise<boolean> {
+  try {
+    const supabase = await createSupabaseServerClient();
+
+    let query = supabase
+      .from('users')
+      .select('id')
+      .eq('email', email);
+
+    if (excludeUserId) {
+      query = query.neq('id', excludeUserId);
+    }
+
+    const { data, error } = await query.single();
+
+    // If no data found, email is available
+    return !data;
+  } catch (error) {
+    console.error('Error checking email availability:', error);
+    return false;
+  }
+}
+
+// Validate user credentials against database
+export async function validateUserCredentials(email: string, password: string): Promise<User | null> {
+  try {
+    const supabase = await createSupabaseServerClient();
+
+    // Get user by email
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error || !user) {
+      return null;
+    }
+
+    // Verify password
+    const hashedPassword = await hashPassword(password);
+    if (user.password_hash !== hashedPassword) {
+      return null;
+    }
+
+    // Return user without password
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    };
+  } catch (error) {
+    console.error('Error validating user credentials:', error);
+    return null;
+  }
+}
+
+// Default users fallback
+function getDefaultUsers(): User[] {
+  return [
+    {
+      id: '00000000-0000-0000-0000-000000000001',
+      email: 'superadmin@example.com',
+      name: 'Super Admin',
+      role: 'super_admin',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    {
+      id: '00000000-0000-0000-0000-000000000002',
+      email: 'admin@example.com',
+      name: 'Admin',
+      role: 'admin',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+  ];
+}
