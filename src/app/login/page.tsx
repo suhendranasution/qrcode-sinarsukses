@@ -173,17 +173,6 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
-
-          <div className="mt-6 p-4 bg-muted rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-medium">Demo Credentials</span>
-            </div>
-            <div className="text-xs text-muted-foreground space-y-1">
-              <div>Email: {process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@example.com"}</div>
-              <div>Password: {process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "admin123"}</div>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>
